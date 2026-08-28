@@ -1,0 +1,16 @@
+{
+  "name": "VoiTTS",
+  "short_name": "VoiTTS",
+  "description": "Type on your phone, speak through your PC.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1d1e20",
+  "theme_color": "#2b313b",
+  "icons": [
+    { "src": "/icon-192.png", "type": "image/png", "sizes": "192x192" },
+    { "src": "/icon-512.png", "type": "image/png", "sizes": "512x512" },
+    { "src": "/icon-512-maskable.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+  ]
+}

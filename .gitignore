@@ -1,0 +1,9 @@
+# Compiled binaries
+/voitts
+/voitts-server
+/bin/
+/out/
+
+# Frontend build output
+/internal/web/dist/*
+!/internal/web/dist/.gitkeep

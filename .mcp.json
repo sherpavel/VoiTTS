@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "svelte": {
+      "type": "http",
+      "url": "https://mcp.svelte.dev/mcp"
+    },
+    "gopls": {
+      "type": "stdio",
+      "command": "gopls",
+      "args": ["mcp"]
+    }
+  }
+}

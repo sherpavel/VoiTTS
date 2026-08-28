@@ -1,0 +1,52 @@
+@import 'tailwindcss';
+
+@theme {
+    /* Color scheme */
+    --color-primary: hsl(218, 6%, 12%);
+    --color-primary-foreground: white;
+    
+    --color-secondary: hsl(344, 8%, 26%);
+    --color-secondary-foreground: white;
+
+    --color-accent: hsl(350, 60%, 40%);
+    --color-accent-foreground: white;
+
+    /* Defaults */
+    --color-background: var(--color-primary);
+    --color-foreground: var(--color-primary-foreground);
+
+    --color-card: hsl(0, 0%, 90%);
+    --color-card-foreground: hsl(0, 0%, 30%);
+
+    --color-surface: hsl(0, 8%, 80%);
+    --color-surface-foreground: hsl(0, 0%, 12%);
+
+    --color-border: hsl(355, 30%, 80%);
+
+    /* Extra */
+    --color-success: hsl(142, 50%, 55%);
+    --color-warning: hsl(32, 80%, 60%);
+    --color-error: hsl(0, 75%, 65%);
+    --color-info: hsl(212, 60%, 51%);
+}
+
+:root {
+    scroll-behavior: smooth;
+    @apply bg-background text-foreground;
+}
+
+body {
+    @apply bg-background text-foreground;
+    font-family:
+        ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto,
+        Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    line-height: 1.2;
+    /* Stops pull-to-refresh from reloading the app mid-message */
+    overscroll-behavior-y: none;
+}
+
+button {
+    cursor: pointer;
+}

@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=VoiTTS
+Icon=voitts
+GenericName=TTS Microphone
+Comment=Send TTS messages from your phone to a virtual mic
+Exec=sh -c "export PATH='__PATH__':\\$PATH; __BIN__ || { echo; echo 'Press Enter to close'; read x; }"
+Terminal=true
+Categories=AudioVideo;Audio;
+Keywords=tts;speech;microphone;piper;
