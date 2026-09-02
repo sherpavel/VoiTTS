@@ -26,10 +26,10 @@ icondir="${ICONDIR:-$HOME/.local/share/icons}"
 # Next to this script in an unpacked tarball; in out/ when run from a checkout
 # that has just been through build-release.sh.
 binary="$here/voitts-server"
-[ -f "$binary" ] || binary="$here/../out/voitts-server"
+[ -f "$binary" ] || binary="$here/../../out/voitts-server"
 if [ ! -f "$binary" ]; then
 	echo "install: no voitts-server beside this script or in out/" >&2
-	echo "         unpack the release tarball first, or run build-release.sh" >&2
+	echo "         unpack the release tarball first, or run build-release-linux.sh" >&2
 	exit 1
 fi
 
@@ -37,9 +37,9 @@ desktop="$here/voitts.desktop"
 [ -f "$desktop" ] || { echo "install: voitts.desktop is missing from $here" >&2; exit 1; }
 
 # Same two places as the binary: beside this script in an unpacked tarball,
-# in assets/ when run from a checkout.
+# and up two from assets/bundle/ to assets/icons/ when run from a checkout.
 icons="$here/icons"
-[ -d "$icons" ] || icons="$here/../assets/icons"
+[ -d "$icons" ] || icons="$here/../../assets/icons"
 if [ ! -f "$icons/voitts.svg" ]; then
 	echo "install: no icons beside this script or in assets/icons" >&2
 	exit 1

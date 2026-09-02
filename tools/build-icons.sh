@@ -5,8 +5,9 @@
 # Renders every icon this project ships from one SVG master, and writes each
 # into the directory that consumes it:
 #
-#   assets/icons/    the launcher's icon. build-release.sh stages this into the
-#                    tarball, install.sh installs it into the hicolor theme.
+#   assets/icons/    the launcher's icon. build-release-linux.sh stages this
+#                    into the tarball, install.sh installs it into the hicolor
+#                    theme.
 #   webui/static/    the web icons. adapter-static copies them to the dist root
 #                    and internal/web compiles them into the binary.
 #

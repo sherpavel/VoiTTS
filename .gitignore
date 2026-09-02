@@ -3,7 +3,9 @@
 /voitts-server
 /bin/
 /out/
+/cmd/server/*.syso
 
 # Frontend build output
 /internal/web/dist/*
 !/internal/web/dist/.gitkeep
+

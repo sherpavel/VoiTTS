@@ -24,7 +24,7 @@ import (
 
 const port = 17890 // Fixed forever!
 
-// version set by scripts/build-release.sh:
+// version set by the release scripts in tools/:
 //
 //	go build -ldflags "-X main.version=v1.2.3"
 var version = "dev"

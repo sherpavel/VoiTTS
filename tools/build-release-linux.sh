@@ -20,7 +20,7 @@ set -euo pipefail
 
 version="${1:-}"
 if [ -z "$version" ]; then
-	echo "usage: build-release.sh <version>    e.g. build-release.sh v0.1.0" >&2
+	echo "usage: build-release-linux.sh <version>    e.g. build-release-linux.sh v0.1.0" >&2
 	exit 2
 fi
 
@@ -44,9 +44,9 @@ mkdir -p "$stage"
 CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
 	go build -ldflags="-s -w -X main.version=$version" -o "$stage/voitts-server" ./cmd/server
 
-install -m755 scripts/install.sh "$stage/install.sh"
-install -m755 scripts/install-piper.sh "$stage/install-piper.sh"
-install -m644 scripts/voitts.desktop README.md LICENSE "$stage/"
+install -m755 assets/bundle/install.sh "$stage/install.sh"
+install -m755 assets/bundle/install-piper.sh "$stage/install-piper.sh"
+install -m644 assets/bundle/voitts.desktop README.md LICENSE "$stage/"
 
 # The launcher's icon, in the layout install.sh expects. Only the desktop set:
 # the web icons live in webui/static and are already inside the binary.
