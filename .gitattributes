@@ -1,0 +1,14 @@
+* text=auto eol=lf
+*.sh       text eol=lf
+*.desktop  text eol=lf
+*.bat  text eol=crlf
+*.cmd  text eol=crlf
+
+*.png    binary
+*.ico    binary
+*.onnx   binary
+*.woff   binary
+*.woff2  binary
+*.tar.gz binary
+
+pnpm-lock.yaml -diff linguist-generated
