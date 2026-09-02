@@ -55,7 +55,7 @@ func run() error {
 	procCtx, stopProcs := context.WithCancel(context.Background())
 	defer stopProcs()
 
-	// External dependencies check: pactl, a PCM player, piper and voice model
+	// External dependencies check: Piper, voice model, audio stack
 	if err := preflight(sigCtx, os.Stdout); err != nil {
 		return err
 	}
@@ -82,6 +82,7 @@ func run() error {
 		return fmt.Errorf("create audio device: %w", err)
 	}
 	defer closeAndLog("audio device", mic)
+	slog.Info("virtual microphone ready", "source", mic.Source())
 
 	stream, err := mic.OpenStream(procCtx, audio.Format(ttsPiper.Format()))
 	if err != nil {
@@ -106,11 +107,7 @@ func run() error {
 
 	ln, err := net.Listen("tcp", ":"+strconv.Itoa(port))
 	if err != nil {
-		if errors.Is(err, syscall.EADDRINUSE) {
-			return fmt.Errorf("port %d is already in use; find what holds it with: ss -ltnp 'sport = :%d'",
-				port, port)
-		}
-		return fmt.Errorf("listen: %w", err)
+		return listenError(port, err)
 	}
 
 	mux := http.NewServeMux()

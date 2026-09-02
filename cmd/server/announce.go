@@ -1,23 +1,17 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"log/slog"
 	"net"
 	"os"
-	"strings"
-	"time"
 
 	"github.com/mdp/qrterminal/v3"
 	"golang.org/x/term"
 )
 
-const mdnsTimeout = 500 * time.Millisecond
-
-// announce prints where the server can be reached. The address comes from the
-// listener rather than a constant: the port is whichever one listen settled on.
+// Prints where the server can be reached + a QR code for phones/tablets.
 func announce(w io.Writer, addr net.Addr) {
 	_, port, err := net.SplitHostPort(addr.String())
 	if err != nil {
@@ -42,8 +36,7 @@ func announce(w io.Writer, addr net.Addr) {
 	}
 	fmt.Fprintln(w)
 
-	// Redirected output gets the URL but no QR: the code is escape sequences,
-	// which are noise in a log file and unscannable there anyway.
+	// If not a terminal output, skips QR (e.g. log file)
 	f, ok := w.(*os.File)
 	if !ok || !term.IsTerminal(int(f.Fd())) {
 		return
@@ -60,28 +53,6 @@ func announce(w io.Writer, addr net.Addr) {
 		WhiteBlackChar: "\033[40;97m▀\033[0m",
 	})
 	fmt.Fprintln(w)
-}
-
-// Returns machine's mDNS name if available, otherwise empty string
-func mdnsHost(ip net.IP) string {
-	host, err := os.Hostname()
-	if err != nil || host == "" || strings.Contains(host, ".") {
-		return ""
-	}
-	name := host + ".local"
-
-	ctx, cancel := context.WithTimeout(context.Background(), mdnsTimeout)
-	defer cancel()
-	addrs, err := net.DefaultResolver.LookupHost(ctx, name)
-	if err != nil {
-		return ""
-	}
-	for _, addr := range addrs {
-		if net.ParseIP(addr).Equal(ip) {
-			return name
-		}
-	}
-	return ""
 }
 
 // Returns LAN ip, reachable by other devices

@@ -181,12 +181,36 @@ func LookupVoice(model string) (path string, sampleRate int, err error) {
 // The Python module is preferred over a bare "piper" on PATH because Arch's
 // extra/piper package is an unrelated gaming-mouse configurator, and launching
 // that instead of a synthesizer is a confusing way to fail.
+//
+// Which interpreters are worth trying differs by platform; the list lives in
+// dirs_linux.go and dirs_windows.go.
 func resolvePiperCmd(override string) ([]string, error) {
 	if override != "" {
-		return strings.Fields(override), nil
+		// An override that names a file is taken whole. Splitting it would
+		// let an override be a command line rather than a path -- "python -m
+		// piper" -- but on Windows a path with a space in it is far commoner
+		// than that, and silently cutting one in half is a baffling failure.
+		if info, err := os.Stat(override); err == nil && !info.IsDir() {
+			return []string{override}, nil
+		}
+
+		argv := strings.Fields(override)
+		if len(argv) == 0 {
+			return nil, fmt.Errorf("piper command override is blank")
+		}
+		// An override naming nothing runnable is a typo, and saying so here is
+		// the difference between the preflight report catching it and the
+		// server dying on the first utterance.
+		// Not quoted here: exec.Error already prints the name quoted, and on a
+		// Windows path strconv.Quote doubles every separator, so saying it
+		// twice reads as two different broken paths.
+		if _, err := exec.LookPath(argv[0]); err != nil {
+			return nil, fmt.Errorf("piper command override: %w", err)
+		}
+		return argv, nil
 	}
 
-	for _, py := range []string{"python3", "python"} {
+	for _, py := range pythonCandidates {
 		bin, err := exec.LookPath(py)
 		if err != nil {
 			continue
@@ -200,27 +224,49 @@ func resolvePiperCmd(override string) ([]string, error) {
 		return []string{bin}, nil
 	}
 
-	return nil, fmt.Errorf("piper not found; install it with `uv tool install piper-tts` " +
-		"(note: the `piper` package in the Arch repos is a mouse utility, not this), " +
-		"or point --piper-cmd at the executable")
+	// PATH is not the only place a correctly installed Piper can be. Both uv
+	// and pipx write their console scripts to ~/.local/bin, which the shell
+	// picks up by default on Linux and on no Windows machine at all: there,
+	// `uv tool install piper-tts` succeeds and leaves nothing on PATH.
+	binDirs := piperBinDirs()
+	for _, dir := range binDirs {
+		candidate := filepath.Join(dir, piperExeName)
+		if info, err := os.Stat(candidate); err == nil && !info.IsDir() {
+			return []string{candidate}, nil
+		}
+	}
+
+	return nil, fmt.Errorf("no importable piper module (tried %s), and no %s in PATH or %s",
+		strings.Join(pythonCandidates, ", "), piperExeName, strings.Join(binDirs, ", "))
 }
 
-// piperDataDirs lists where voice models are kept, most specific first.
-func piperDataDirs() []string {
+// piperBinDirs lists the directories Python tool installers put console
+// scripts in, most specific first. It is searched after PATH: PATH is what the
+// user configured, and this is only the fallback for a tool that installed
+// itself correctly somewhere the shell was never told about.
+func piperBinDirs() []string {
 	var dirs []string
-	if xdg := os.Getenv("XDG_DATA_HOME"); xdg != "" {
-		dirs = append(dirs, filepath.Join(xdg, "piper", "voices"), filepath.Join(xdg, "piper"))
+	// Both installers let the location be moved, and someone who has moved it
+	// is exactly the person whose piper is not where this would otherwise look.
+	for _, key := range []string{"UV_TOOL_BIN_DIR", "PIPX_BIN_DIR"} {
+		if dir := os.Getenv(key); dir != "" {
+			dirs = append(dirs, dir)
+		}
 	}
 	if home, err := os.UserHomeDir(); err == nil {
-		dirs = append(dirs,
-			filepath.Join(home, ".local", "share", "piper", "voices"),
-			filepath.Join(home, ".local", "share", "piper"),
-		)
+		dirs = append(dirs, filepath.Join(home, ".local", "bin"))
 	}
-	if wd, err := os.Getwd(); err == nil {
-		dirs = append(dirs, wd)
+	return dirs
+}
+
+// DefaultVoiceDir is the directory voices are searched for first, and so the
+// one the install instructions point at. The search list itself is built per
+// platform, in dirs_linux.go and dirs_windows.go.
+func DefaultVoiceDir() string {
+	if dirs := piperDataDirs(); len(dirs) > 0 {
+		return dirs[0]
 	}
-	return append(dirs, "/usr/share/piper/voices", "/usr/share/piper")
+	return "."
 }
 
 // resolveModel turns a voice name or path into an absolute .onnx path.
@@ -244,8 +290,8 @@ func resolveModel(model string) (string, error) {
 		}
 	}
 
-	return "", fmt.Errorf("piper voice %q not found in %s\ndownload it with: python3 -m piper.download_voices %s --data-dir %s",
-		model, strings.Join(dirs, ", "), model, dirs[0])
+	return "", fmt.Errorf("piper voice %q not found in %s\ndownload it with: python -m piper.download_voices %s --data-dir %s",
+		model, strings.Join(dirs, ", "), model, DefaultVoiceDir())
 }
 
 // readSampleRate pulls audio.sample_rate from the voice's companion config,
