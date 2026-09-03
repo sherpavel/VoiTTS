@@ -15,6 +15,8 @@
     - [Method 2: Build with the release script](#method-2-build-with-the-release-script) - one script, from a checkout
     - [Method 3: Manual build](#method-3-manual-build) - `pnpm build` then `go build`
     - [Check if it works](#check-if-it-works) - the startup report, and picking the mic
+- [Troubleshooting](#troubleshooting)
+    - [Firewall](#firewall) - "host not found" from the phone: [ufw](#linux-ufw), [firewalld](#linux-firewalld), [Windows](#windows-firewall)
 - [AI usage](#ai-usage)
 
 # Overview
@@ -63,6 +65,8 @@ macOS has neither, and is not supported. The equivalent there is BlackHole or Lo
 missing it prints the install command for your distro and leaves it to you - the
 server will not start until you run it. See [Runtime prerequisites](#runtime-prerequisites).
 
+#### ["Help, I can't connect, it says the host not found!" - fix firewall, click here.](#firewall)
+
 ### Windows
 
 1. Install **[VB-CABLE](https://vb-audio.com/Cable/)**.
@@ -79,6 +83,8 @@ server will not start until you run it. See [Runtime prerequisites](#runtime-pre
 4. Download the latest `voitts-server_*_windows_amd64.zip` from [Releases](https://github.com/sherpavel/VoiTTS/releases) and unzip it anywhere.
 5. Run `voitts-server.exe` and if you see a QR code - all good! If not, the app will say what failed.
 6. Use `CABLE Output` as your input device in other applications.
+
+#### ["Help, I can't connect, it says the host not found!" - fix firewall, click here.](#firewall)
 
 ## Runtime prerequisites
 
@@ -268,7 +274,8 @@ For frontend work, `pnpm --dir webui dev` proxies `/api` to a server already run
 
 ## Check if it works
 
-Start it. Before anything else it reports the four things it needs:
+Start it. Before anything else it reports what it needs - the audio stack,
+the synthesizer and its voice:
 
 ```
 $ voitts-server
@@ -279,8 +286,7 @@ $ voitts-server
   + voice         ~/.local/share/piper/voices/en_US-hfc_male-medium.onnx (22050 Hz)
 ```
 
-The first two lines are what differs on Windows, where the audio stack is one
-driver rather than two binaries:
+The first two lines are what differs on Windows, where the audio stack is one driver rather than two binaries.
 
 ```
 > voitts-server.exe
@@ -342,15 +348,82 @@ sink and source are left behind on every run. Windows has no such tidying to
 do: VB-CABLE is a driver, the server only borrows it, and `Ctrl-C` or closing
 the window leaves nothing behind either way.
 
+# Troubleshooting
+
+## Firewall
+
+The server binds every interface, so "host not found" or infinite loading on the phone is almost always the machine's firewall blocking the requests.
+
+First, check if that's firewall issue:
+1. Start the server.
+2. Copy the IP address and open it in the browser on the same machine.
+
+If you see the app interface locally, but it's unreachable on anything else on your LAN network - that's a firewall issue.
+
+Fix:
+- [Linux (ufw)](#linux-ufw)
+- [Linux (firewalld)](#linux-firewalld)
+- [Windows](#windows-firewall)
+
+### Linux (ufw)
+
+Fix for all network interfaces:
+
+```sh
+sudo ufw status
+sudo ufw allow 17890/tcp comment 'VoiTTS'
+sudo ufw allow mDNS
+sudo ufw reload
+```
+
+Or scoped to your own network, rather than to any and all networks the machine ever joins:
+
+```sh
+sudo ufw allow from 192.168.0.0/16 to any port 17890 proto tcp comment 'VoiTTS'
+sudo ufw allow mDNS
+sudo ufw reload
+```
+
+### Linux (firewalld)
+
+```sh
+sudo firewall-cmd --state
+sudo firewall-cmd --permanent --add-port=17890/tcp
+sudo firewall-cmd --permanent --add-service=mdns
+sudo firewall-cmd --reload
+```
+
+### Windows Firewall
+
+Windows blocks all inbound connections on a **Public** network, so check the profile first:
+
+1. Go to `Start` > `Settings` > `Network & internet`
+2. Click on `Ethernet` or if WiFi - `Properties`
+3. Change the network to `Private`
+
+If that didn't fix it, then allow the port explicitly with Powershell (Admin):
+
+```powershell
+New-NetFirewallRule -DisplayName 'VoiTTS' -Direction Inbound `
+  -Protocol TCP -LocalPort 17890 -Action Allow -Profile Private
+```
+
+The first time the server runs, Windows offers a dialog for the app to reach the internet. If you dismissed it or unticking **Private networks**, it writes a *block* rule. Clear it before adding your own:
+
+```powershell
+Get-NetFirewallRule -DisplayName '*voitts*' | Format-List DisplayName, Action, Profile
+Get-NetFirewallRule -DisplayName '*voitts*' | Where-Object Action -eq 'Block' | Remove-NetFirewallRule
+```
+
 ---
 
 # AI usage
 
 Parts of this project were written with AI. Everything that ships was read, edited and tested. Nothing here was committed unseen.
 
-**Scripts.** Everything in [`tools/`](tools/) and [`assets/bundle/`](assets/bundle/) is AI-written in full - the shell scripts and the PowerShell ones alike - and each carries the same warning in the header.
+**Scripts.** Everything in [`tools/`](tools/) and [`assets/bundle/`](assets/bundle/) is AI-written in full - shell and PowerShell scripts - all carry the same warning in the header.
 
-**Go.** Internal Piper and audio backends, and the pre-run check: [`internal/tts`](internal/tts/tts.go), [`internal/audio`](internal/audio/), [`cmd/server/check.go`](cmd/server/check.go) and its two platform halves. The winmm bindings in [`internal/audio/winmm_windows.go`](internal/audio/winmm_windows.go) especially - hand-written syscall shims are exactly the sort of thing worth a second read.
+**Go.** Internal Piper and audio backends, and the pre-run check: [`internal/tts`](internal/tts/tts.go), [`internal/audio`](internal/audio/), [`cmd/server/check.go`](cmd/server/check.go) and its two platform halves. The winmm bindings in [`internal/audio/winmm_windows.go`](internal/audio/winmm_windows.go).
 
 **Svelte.** The drag-to-reorder action (`use:`): [`sortable.svelte.ts`](webui/src/lib/actions/sortable.svelte.ts).
 
