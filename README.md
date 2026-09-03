@@ -2,7 +2,18 @@
 
 **Type on your phone, speak through your PC.** **VoiTTS** turns anything you type into speech on a virtual microphone every app on the machine sees as real.
 
-> This is a Linux-first application, your Windows experience may vary.
+<table>
+<tr>
+<td align="center" valign="top"><img src="assets/screenshots/console.png" width="540"
+    alt="The server's startup report: audio server, PCM player, piper and voice all found, then the address to open and a QR code for it"></td>
+<td align="center" valign="top"><img src="assets/screenshots/phrases.png" width="190"
+    alt="VoiTTS on a phone: a profile's saved phrases, with the instant-TTS bar at the bottom of the screen"></td>
+</tr>
+<tr>
+<td align="center">Start it, scan the code</td>
+<td align="center">Tap a phrase, or type your own</td>
+</tr>
+</table>
 
 ## Index
 - [Overview](#overview) - the [web interface](#web-interface) and the [audio stack](#audio-stack)
@@ -27,6 +38,22 @@ Mobile-first web UI, accessed over LAN.
 - Send instant TTS messages.
 - Invoke pre-written sentences.
 - Group texts in custom profiles.
+
+<table>
+<tr>
+<td align="center"><img src="assets/screenshots/profiles.png" width="230"
+    alt="The profile list, each row with a drag handle"></td>
+<td align="center"><img src="assets/screenshots/two-columns.png" width="230"
+    alt="A profile's phrases laid out in two columns"></td>
+<td align="center"><img src="assets/screenshots/edit.png" width="230"
+    alt="Edit mode, with each phrase editable and a save button pinned to the bottom"></td>
+</tr>
+<tr>
+<td align="center">Profiles/groups</td>
+<td align="center">1-click sentences</td>
+<td align="center">Edit: add, reorder, delete</td>
+</tr>
+</table>
 
 ## Audio stack
 
